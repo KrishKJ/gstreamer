@@ -5,7 +5,8 @@ import (
 )
 
 func StartVAD(pipeline *Pipeline) {
-	// Assuming you have a method to implement Voice Activity Detection (VAD)
+	
+	// Starting Message for User
 	log.Println("Starting Voice Activity Detection")
 
 	// This is just a placeholder for the VAD logic. You'd need to interact with GStreamer

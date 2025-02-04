@@ -12,8 +12,8 @@ type Config struct {
 
 func LoadConfig() *Config {
 	cfg := &Config{
-		// Use a proper local file path for the test tone
-		TestTonePath: "test-tone.wav",  // Or set via environment variable
+		// local file path for the test tone
+		TestTonePath: "test-tone.wav",  
 	}
 
 	// Load configurations from environment variables or files here
