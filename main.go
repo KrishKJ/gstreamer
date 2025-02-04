@@ -5,8 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	// "GStreamer/audio"
-	// "GStreamer/config"
 	"github.com/KrishKJ/gstreamer/audio"
 	"github.com/KrishKJ/gstreamer/config"
 )

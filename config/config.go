@@ -1,55 +1,29 @@
 package config
 
 import (
-	"flag"
+	"log"
 	"os"
-	"strconv"
 )
 
-// Config holds configurable settings
 type Config struct {
-	TestToneFreq   int
-	SilenceThreshold float64
-	MicSource      string
+	TestTonePath string
+	// MicInputPath is not needed anymore, as microphone input is captured directly by GStreamer.
 }
 
-// LoadConfig loads configuration from flags or environment variables
-func LoadConfig() Config {
-	freq := flag.Int("freq", 440, "Test tone frequency")
-	threshold := flag.Float64("threshold", -50.0, "Silence detection threshold (dB)")
-	mic := flag.String("mic", "pulsesrc", "Microphone source")
-
-	flag.Parse()
-
-	return Config{
-		TestToneFreq:   getEnvInt("TEST_TONE_FREQ", *freq),
-		SilenceThreshold: getEnvFloat("SILENCE_THRESHOLD", *threshold),
-		MicSource:      getEnv("MIC_SOURCE", *mic),
+func LoadConfig() *Config {
+	cfg := &Config{
+		// Use a proper local file path for the test tone
+		TestTonePath: "test-tone.wav",  // Or set via environment variable
 	}
-}
 
-// Helper functions to read environment variables
-func getEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
+	// Load configurations from environment variables or files here
+	if testTonePath, exists := os.LookupEnv("TEST_TONE_PATH"); exists {
+		cfg.TestTonePath = testTonePath
 	}
-	return fallback
-}
 
-func getEnvInt(key string, fallback int) int {
-	if value, exists := os.LookupEnv(key); exists {
-		if parsed, err := strconv.Atoi(value); err == nil {
-			return parsed
-		}
-	}
-	return fallback
-}
+	log.Printf("Using test tone from %s", cfg.TestTonePath)
 
-func getEnvFloat(key string, fallback float64) float64 {
-	if value, exists := os.LookupEnv(key); exists {
-		if parsed, err := strconv.ParseFloat(value, 64); err == nil {
-			return parsed
-		}
-	}
-	return fallback
+	// No need to log or configure MicInputPath directly, as GStreamer will handle microphone input
+
+	return cfg
 }

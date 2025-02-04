@@ -2,49 +2,60 @@ package audio
 
 import (
 	"fmt"
-	// "github.com/notedit/gst-go"
-	// "github.com/tolexo/gst/config"
-	// "/gst-go"
-	"github.com/ziutek/gst"
-	// "gst/config"
-	"github.com/KrishKJ/gstreamer/config"
+	"log"
+	"os"
 
+	"github.com/KrishKJ/gstreamer/config"
+	gst "github.com/go-gst/go-gst/gst"
 )
 
-// AudioPipeline wraps the gst pipeline
-type AudioPipeline struct {
-	pipeline *gst.Pipeline
-	testTone *gst.Element
-	level    *gst.Element
+type Pipeline struct {
+	gstPipeline *gst.Pipeline
 }
 
-// NewPipeline initializes the gst pipeline
-func NewPipeline(cfg config.Config) (*AudioPipeline, error) {
-	// Define gst pipeline
-	pipelineStr := fmt.Sprintf(`
-		%s name=micsrc ! audioconvert ! audioresample ! level interval=50000000 name=level
-		audiotestsrc wave=sine freq=%d ! audioconvert ! audioresample name=testtone
-		adder name=mixer ! audioconvert ! autoaudiosink
-	`, cfg.MicSource, cfg.TestToneFreq)
+// Init initializes GStreamer
+func Init() error {
+	// Initialize GStreamer with os.Args (it doesn't return an error, it panics on failure)
+	gst.Init(&os.Args)
+	return nil // No need to check for error since gst.Init() doesn't return one
+}
 
-	pipeline, err := gst.NewPipeline(pipelineStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create pipeline: %w", err)
+func NewPipeline(cfg *config.Config) (*Pipeline, error) {
+	// Initialize GStreamer
+	if err := Init(); err != nil {
+		return nil, fmt.Errorf("failed to initialize GStreamer: %v", err)
 	}
 
-	return &AudioPipeline{
-		pipeline: pipeline,
-		testTone: pipeline.GetElement("testtone"),
-		level:    pipeline.GetElement("level"),
+	// Build pipeline based on configuration
+	// pipelineStr := fmt.Sprintf("playbin uri=file://%s", cfg.TestTonePath)
+
+	// Pipeline for test tone and microphone (use your actual microphone input logic)
+	// Example for macOS, replace this with the correct source
+	pipelineStr := fmt.Sprintf("avfsrc ! audioconvert ! audioresample ! autoaudiosink")  // Replace with correct microphone capture
+
+	// Build pipeline based on configuration
+	if cfg.TestTonePath != "" {
+		pipelineStr = fmt.Sprintf("filesrc location=%s ! decodebin ! audioconvert ! audioresample ! autoaudiosink", cfg.TestTonePath)
+	}
+
+	// Create the pipeline
+	pipeline, err := gst.NewPipeline(pipelineStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pipeline: %v", err)
+	}
+
+	return &Pipeline{
+		gstPipeline: pipeline,
 	}, nil
 }
 
 // Start plays the pipeline
-func (p *AudioPipeline) Start() error {
-	return p.pipeline.SetState(gst.StatePlaying)
+func (p *Pipeline) Start() error {
+	return p.gstPipeline.SetState(gst.StatePlaying)
 }
 
-// Stop stops the pipeline
-func (p *AudioPipeline) Stop() error {
-	return p.pipeline.SetState(gst.StateNull)
+func (p *Pipeline) Stop() {
+	// Set pipeline state to Null to stop it
+	p.gstPipeline.SetState(gst.StateNull)
+	log.Println("Pipeline stopped")
 }
